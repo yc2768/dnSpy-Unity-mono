@@ -23,46 +23,46 @@
 extern gboolean dnSpy_hideDebugger = 1;
 
 void
-dnSpy_debugger_init ()
+dnSpy_debugger_init()
 {
-	gboolean fixDefer = FALSE;
-	char* envVal = getenv (ENV_VAR_NAME);
-
-#if DNUNITYRT != 0
-	if (!envVal) {
-		envVal = getenv (ENV_VAR_NAME_V0);
-		fixDefer = TRUE;
-	}
-#endif
+#if DNUNITYRT == 0
+	char* envVal = getenv(ENV_VAR_NAME_V0);
 
 	if (!envVal) {
 		envVal = "--debugger-agent=transport=dt_socket,server=y,address=127.0.0.1:55555,defer=y";
-		fixDefer = TRUE;
 	}
+#else
+	char* envVal = getenv(ENV_VAR_NAME_V1);
 
-#if DNUNITYRT != 0
+	//	if (!envVal) {
+	//		envVal = getenv(ENV_VAR_NAME_V0);
+	//
+	//#define defer_y		"defer=y"
+	//#define suspend_n	"suspend=n"
+	//
+	//		const char* s = strstr(envVal, defer_y);
+	//		if (s) {
+	//			int defer_pos = s - envVal;
+	//			int envVal_len = strlen(envVal);
+	//			int defer_y_len = strlen(defer_y);
+	//			int suspend_n_len = strlen(suspend_n);
+	//			int newStr_len = envVal_len - defer_y_len + suspend_n_len;
+	//			char* newStr = (char*)malloc(newStr_len + 1);
+	//			memcpy(newStr, envVal, defer_pos);
+	//			memcpy(newStr + defer_pos, suspend_n, suspend_n_len);
+	//			memcpy(newStr + defer_pos + suspend_n_len, s + defer_y_len, envVal_len - defer_pos - defer_y_len);
+	//			newStr[newStr_len] = 0;
+	//			envVal = newStr;
+	//		}
+	//	}
 
-#define defer_y		"defer=y"
-#define suspend_n	"suspend=n"
-
-	const char* s = strstr (envVal, defer_y);
-	if (s && fixDefer) {
-		int envVal_len = strlen (envVal);
-		int defer_y_len = strlen (defer_y);
-		int suspend_n_len = strlen (suspend_n);
-		int newStr_len = envVal_len - defer_y_len + suspend_n_len;
-		char* newStr = (char*)malloc (newStr_len + 1);
-		memcpy (newStr, envVal, s - envVal);
-		memcpy (newStr + (s - envVal), suspend_n, suspend_n_len);
-		memcpy (newStr + (s - envVal) + suspend_n_len, s + defer_y_len, envVal_len - (s + defer_y_len - envVal));
-		newStr [newStr_len] = 0;
-		envVal = newStr;
-	}
+	if (!envVal) {
+		envVal = "--debugger-agent=transport=dt_socket,server=y,address=127.0.0.1:55555,suspend=n";
+}
 #endif
-
 	char* argv[] = { envVal };
-	mono_jit_parse_options (1, (char**)argv);
-	mono_debug_init (MONO_DEBUG_FORMAT_MONO);
+	mono_jit_parse_options(1, (char**)argv);
+	mono_debug_init(MONO_DEBUG_FORMAT_MONO);
 }
 
 int
