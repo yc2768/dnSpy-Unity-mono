@@ -37,6 +37,7 @@ namespace UnityMonoDllSourceCodePatcher.V40 {
 			Patch_masm_fixed_props();
 			Patch_bdwgc_gc_atomic_ops_h();
 			Patch_bdwgc_gcconfig_h();
+			Patch_mono_metadata_mono_debug_c();
 		}
 
 		void Patch_mono_metadata_icall_c() {
@@ -92,15 +93,6 @@ namespace UnityMonoDllSourceCodePatcher.V40 {
 				Verify(lines[index++].Text, "\t\t}");
 				Verify(lines[index++].Text, "\t}");
 				textFilePatcher.Insert(index++, "\tit.seq_point = found_sp;");
-			}
-
-			{
-				int index = textFilePatcher.GetIndexesOfLine(line => line.Text.Contains("case CMD_THREAD_GET_FRAME_INFO: {")).Single();
-				index = textFilePatcher.GetIndexOfLine(line => line.Text.Contains("tls = (DebuggerTlsData *)mono_g_hash_table_lookup (thread_to_tls, thread);"), index);
-				Verify(lines[index + 1].Text, "\t\tmono_loader_unlock ();");
-				Verify(lines[index + 2].Text, "\t\tg_assert (tls);");
-				lines[index + 2] = lines[index + 2].Replace("\t\tif (!tls)");
-				textFilePatcher.Insert(index + 3, "\t\t\treturn ERR_INVALID_ARGUMENT;");
 			}
 
 			textFilePatcher.Write();
@@ -164,6 +156,17 @@ namespace UnityMonoDllSourceCodePatcher.V40 {
 			var textFilePatcher = new TextFilePatcher(filename);
 			int index = textFilePatcher.GetIndexOfLine("#define GCCONFIG_H");
 			textFilePatcher.Insert(index + 1, "#define GC_DISABLE_INCREMENTAL");
+			textFilePatcher.Write();
+		}
+
+		void Patch_mono_metadata_mono_debug_c() {
+			if (solutionOptions.UnityVersion.CompareTo(new UnityVersion(2019, 1, 0, "-mbe")) < 0)
+				return;
+			var filename = Path.Combine(solutionOptions.UnityVersionDir, "mono", "metadata", "mono-debug.c");
+			var textFilePatcher = new TextFilePatcher(filename);
+			var lines = textFilePatcher.Lines;
+			int index = textFilePatcher.GetIndexOfLine("g_assert (!mono_debug_initialized);");
+			lines[index] = lines[index].Replace("if (mono_debug_initialized) return;");
 			textFilePatcher.Write();
 		}
 	}
