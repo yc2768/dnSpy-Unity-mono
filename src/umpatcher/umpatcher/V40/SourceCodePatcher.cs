@@ -165,8 +165,8 @@ namespace UnityMonoDllSourceCodePatcher.V40 {
 			var filename = Path.Combine(solutionOptions.UnityVersionDir, "mono", "metadata", "mono-debug.c");
 			var textFilePatcher = new TextFilePatcher(filename);
 			var lines = textFilePatcher.Lines;
-			int index = textFilePatcher.GetIndexOfLine("g_assert (!mono_debug_initialized);");
-			lines[index] = lines[index].Replace("if (mono_debug_initialized) return;");
+			int index = textFilePatcher.GetIndexOfLine("\tg_assert (!mono_debug_initialized);");
+			lines[index] = lines[index].Replace("\tif (mono_debug_initialized) return;");
 			textFilePatcher.Write();
 		}
 	}
